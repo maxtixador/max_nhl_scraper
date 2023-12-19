@@ -146,14 +146,14 @@ def format_columns(df):
     df["opposing_goalie_id"] = df["details.goalieInNetId"]
 
 
-    df.drop(["details.winningPlayerId", "details.losingPlayerId",
+    df = df.drop(["details.winningPlayerId", "details.losingPlayerId",
              "details.hittingPlayerId", "details.hitteePlayerId",
              "details.shootingPlayerId", "details.goalieInNetId",
              "details.playerId", "details.blockingPlayerId",
              "details.scoringPlayerId", "details.assist1PlayerId", "details.assist2PlayerId",
              "details.committedByPlayerId", "details.drawnByPlayerId", "details.servedByPlayerId",
              "situationCode", "typeCode", "sortOrder", "eventId", 'periodDescriptor.number', 'details.eventOwnerTeamId'
-             ], axis=1, inplace=True)
+             ], axis=1)
 
     # Renaming columns
     df.columns = [col.split('.')[-1] for col in df.columns]
@@ -198,7 +198,7 @@ def add_event_players_info(df, rosters_df):
     )
     )
     df["event_team"] = df["event_player1_team"]
-    df.rename(columns={"typeDescKey" : "event"}, inplace=True)
+    df = df.rename(columns={"typeDescKey" : "event"})
     df["is_home"] = np.nan
     df.loc[df["event_team"] == df["home_abbr"],"is_home"] = 1
     df.loc[df["event_team"] == df["away_abbr"],"is_home"] = 0
@@ -218,7 +218,7 @@ def strength(df):
 
     df["strength"] = np.where(df["event_team"] == df['home_abbr'], df['home_skaters'].astype(str) + 'v' + df['away_skaters'].astype(str), df['away_skaters'].astype(str) + 'v' + df['home_skaters'].astype(str))
 
-    df.strength.replace({'0v0': None}, inplace=True)
+    df = df.strength.replace({'0v0': None})
 
 
     return df
@@ -239,14 +239,16 @@ def process_pbp(pbp, shifts_df, rosters_df, is_home=True):
         current_time = row['elapsedTime']
         if pd.isna(row['event_team']):
             players_on.append(np.nan)
-        elif row['event'] == 'faceoff':
-            # current_time = row['elapsedTime']
-            # print(current_time)
-            players_on_ice = shifts_df.query('startTime_s == @current_time')['playerId'].unique().tolist()
+        # elif row['event'] == 'faceoff':
+        #### You should get rid of the elif row['event'] == 'faceoff': branch in process_pbp. Faceoffs don't have to come at the start of a shift. Seems like that cleans up a lot of it.   
+
+        #     # current_time = row['elapsedTime']
+        #     # print(current_time)
+        #     players_on_ice = shifts_df.query('startTime_s == @current_time')['playerId'].unique().tolist()
             
-            # players_on_ice_2 = [players.get(int(item), int(item)) for item in players_on_ice]
-            # print(players_on_ice)
-            players_on.append(players_on_ice)
+        #     # players_on_ice_2 = [players.get(int(item), int(item)) for item in players_on_ice]
+        #     # print(players_on_ice)
+        #     players_on.append(players_on_ice)
             
         # elif row['event'] == 'goal':
         #     players_on_ice = shifts_df.query('startTime_s < @current_time and endTime_s >= @current_time')['playerId'].unique().tolist()
@@ -305,7 +307,7 @@ def process_pbp(pbp, shifts_df, rosters_df, is_home=True):
     # Use the replace method to replace player IDs with names
     pbp[columns_to_replace] = pbp[columns_to_replace].replace(players_id) 
 
-    pbp.drop([f"{place}_on"], axis=1, inplace=True)
+    pbp = pbp.drop([f"{place}_on"], axis=1)
     pbp=pbp.loc[:, ~pbp.columns[::-1].duplicated()[::-1]]
 
     return pbp
@@ -465,7 +467,7 @@ def fetch_api_shifts(game_id, pbp_json=None):
 
     return shift_df
 
-def fetch_html_shifts2(game_id=2023020069, season=None, pbp_json=None):
+def fetch_html_shifts(game_id=2023020069, season=None, pbp_json=None):
     ''' 
     Fetches shifts data from the NHL API and returns a DataFrame with the data.
     ----
@@ -588,7 +590,7 @@ def fetch_html_shifts2(game_id=2023020069, season=None, pbp_json=None):
                 .drop(columns=['timeInPeriod', 'period']))
 
     
-
+    #
     for _, shift in all_shifts.iterrows():
 
         time = shift["startTime_s"]
@@ -694,19 +696,19 @@ def scrape_game(game_id: int, pbp_json: Union[Dict, None] = None, game_rosters: 
         df = process_pbp(df, html_shifts, game_rosters, False)
         df = strength(df)
 
-        df.drop(columns=[ 'winningPlayerId', 'losingPlayerId',
+        df = df.drop(columns=[ 'winningPlayerId', 'losingPlayerId',
        'hittingPlayerId', 'hitteePlayerId', 'shootingPlayerId',
        'goalieInNetId', 'playerId', 'blockingPlayerId', 'scoringPlayerId',
        'assist1PlayerId', 'assist2PlayerId', 'committedByPlayerId',
-       'drawnByPlayerId', 'servedByPlayerId', 'situationCode', 'sortOrder','eventId', 'number',], inplace=True)
+       'drawnByPlayerId', 'servedByPlayerId', 'situationCode', 'sortOrder','eventId', 'number',])
 
     else:
         df = df
-        df.drop(columns=[ 'winningPlayerId', 'losingPlayerId',
+        df = df.drop(columns=[ 'winningPlayerId', 'losingPlayerId',
        'hittingPlayerId', 'hitteePlayerId', 'shootingPlayerId',
        'goalieInNetId', 'playerId', 'blockingPlayerId', 'scoringPlayerId',
        'assist1PlayerId', 'assist2PlayerId', 'committedByPlayerId',
-       'drawnByPlayerId', 'servedByPlayerId', 'situationCode', 'sortOrder','eventId', 'number',], inplace=True)
+       'drawnByPlayerId', 'servedByPlayerId', 'situationCode', 'sortOrder','eventId', 'number',])
     
     return df
 
@@ -729,7 +731,7 @@ def get_strength_toi_per_team(game_id=2023020005, game_rosters: Union[pd.DataFra
         Whether to get the home or away players. The default is True.
     '''
 
-    html_shifts = fetch_html_shifts2(game_id) if html_shifts is None else html_shifts
+    html_shifts = fetch_html_shifts(game_id) if html_shifts is None else html_shifts
     game_rosters = fetch_game_rosters(game_id) if game_rosters is None else game_rosters
 
     is_home = 1
@@ -790,7 +792,7 @@ def get_player_count_per_second(game_id=2023020005, game_rosters: Union[pd.DataF
 
     place = 'home' if is_home else 'away'
 
-    html_shifts = fetch_html_shifts2(game_id) if html_shifts is None else html_shifts
+    html_shifts = fetch_html_shifts(game_id) if html_shifts is None else html_shifts
     game_rosters = fetch_game_rosters(game_id) if game_rosters is None else game_rosters
 
     
@@ -834,7 +836,7 @@ def get_player_ids_per_second(game_id=2023020005, game_rosters: Union[pd.DataFra
         Whether to get the home or away players. The default is True.
 
     '''
-    html_shifts = fetch_html_shifts2(game_id) if html_shifts is None else html_shifts
+    html_shifts = fetch_html_shifts(game_id) if html_shifts is None else html_shifts
     game_rosters = fetch_game_rosters(game_id) if game_rosters is None else game_rosters
 
     place = 'home' if is_home else 'away'
@@ -882,7 +884,7 @@ def players_toi_per_strength(game_id=2023020005, game_rosters: Union[pd.DataFram
         Whether to get the home or away players. The default is True.
     '''
 
-    html_shifts = fetch_html_shifts2(game_id) if html_shifts is None else html_shifts
+    html_shifts = fetch_html_shifts(game_id) if html_shifts is None else html_shifts
     game_rosters = fetch_game_rosters(game_id) if game_rosters is None else game_rosters
     
     place = 'home' if is_home else 'away'

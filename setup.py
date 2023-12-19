@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='max_nhl_scraper',
-    version='0.1.2',
+    version='0.1.4',
     author='Max Tixador',
     author_email='maxtixador@gmail.com',
     packages=find_packages(),
@@ -10,10 +10,10 @@ setup(
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     install_requires=[
-        'pandas == 2.1.0',
-        'numpy == 1.26.1',
-        'requests == 2.29.0',
-        'beautifulsoup4', # BeautifulSoup should be specified as beautifulsoup4
+        'beautifulsoup4==4.12.2',
+    'numpy==1.26.2',
+    'pandas==2.1.4',
+    'Requests==2.31.0', # BeautifulSoup should be specified as beautifulsoup4
     ],
     python_requires='>=3.6',
     include_package_data=True,

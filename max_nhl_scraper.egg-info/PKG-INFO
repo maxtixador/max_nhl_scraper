@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: max-nhl-scraper
-Version: 0.1.2
+Version: 0.1.3
 Summary: A package for scraping NHL data
 Author: Max Tixador
 Author-email: maxtixador@gmail.com
@@ -27,24 +27,22 @@ pip install max_nhl_scraper
 Here's a simple example of how to use max_nhl_scraper:
 
 ```python
-from max_nhl_scraper import MaxNHLScraper
+from max_nhl_scraper import MaxNHLScraper as mx
 
 
-# Create an instance of the scraper
-scraper = MaxNHLScraper()
 
 # Example: Scrape data for a specific game or player
-data = scraper.scrape_game(game_id=2023020005) #Replace <2023020005> with the actual game ID you want to scrape data for.
+data = mx.scrape_game(game_id=2023020005) #Replace <2023020005> with the actual game ID you want to scrape data for.
 ```
 
 ## Requirements
 
 nhl_scraper requires the following Python libraries:
 
-pandas
-numpy
-requests
-BeautifulSoup
+beautifulsoup4==4.12.2
+numpy==1.26.2
+pandas==2.1.4
+Requests==2.31.0
 These dependencies should be automatically installed when you install the package via pip.
 
 ## License
