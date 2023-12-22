@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='max_nhl_scraper',
-    version='0.1.3',
+    version='0.1.4',
     author='Max Tixador',
     author_email='maxtixador@gmail.com',
     packages=find_packages(),

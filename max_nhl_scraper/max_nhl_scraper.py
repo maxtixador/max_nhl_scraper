@@ -662,7 +662,7 @@ def scrape_game(game_id: int, pbp_json: Union[Dict, None] = None, game_rosters: 
     game_rosters = fetch_game_rosters(game_id) if game_rosters is None else game_rosters
     # html_shifts = fetch_html_shifts(game_id) if html_shifts is None else html_shifts
 
-    html_shifts = fetch_html_shifts2(game_id) if html_shifts is None else html_shifts
+    html_shifts = fetch_html_shifts(game_id) if html_shifts is None else html_shifts
 
     gameType = "preseason" if pbp_json.get("gameType", []) == 1 else ("regular-season" if pbp_json.get("gameType", []) == 2 else "playoffs")
 
