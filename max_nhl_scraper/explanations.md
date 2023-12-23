@@ -1,4 +1,5 @@
-#Scrape Folder
+# Scrape Folder
+#
 The "scrape" folder in this project is a directory that contains all the code and resources related to web scraping. Web scraping is the process of extracting data from websites by sending HTTP requests, parsing the HTML content, and extracting the desired information.
 
 In the "scrape" folder, you will find the following files and directories:
