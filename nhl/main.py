@@ -64,7 +64,6 @@ def scrape_game(game_id : int, file : str = None, save : bool = False):
     df[['details.awayScore', 'details.homeScore', 'details.awaySOG', 'details.homeSOG']] = df[['details.awayScore', 'details.homeScore', 'details.awaySOG', 'details.homeSOG']].ffill().fillna(0)
 
     # Add normalized x-coordinate so that the home team is always defending the left side of the ice for future analysis
-    df['normalized_xCoord'] = df.apply(adjust_x_coord, axis=1)
 
     
     # Add team abbreviations for each event
@@ -89,7 +88,7 @@ def scrape_game(game_id : int, file : str = None, save : bool = False):
 
     df = df.sort_values(by=['elapsedTime'], ascending=True).reset_index(drop=True)
 
-    df = df.rename(columns={'periodDescriptor.number': 'period'})
+    df = df.rename(columns={'periodDescriptor.number': 'periodDescriptor_number'})
 
 
     # Remove 'details.' and 'periodDescriptor.' prefixes from column names
@@ -151,6 +150,16 @@ def scrape_game(game_id : int, file : str = None, save : bool = False):
     df['home_goalie_fullName'] = df['home_goalie_id'].map(id_name_dict)
     df['away_goalie_fullName'] = df['away_goalie_id'].map(id_name_dict)
 
+    # Initialize 'normalized_xCoord' with 'xCoord'
+    df['normalized_xCoord'] = df['xCoord']
+
+    # Update 'normalized_xCoord' based on conditions
+    df.loc[(df['homeTeamDefendingSide'] == 'right') & (df['is_home'] == 1), 'normalized_xCoord'] = df['xCoord'] * -1
+    df.loc[(df['homeTeamDefendingSide'] == 'left') & (df['is_home'] == 0), 'normalized_xCoord'] = df['xCoord'] * -1
+
+    # Calculate 'normalized_yCoord' based on 'normalized_xCoord'
+    df['normalized_yCoord'] = np.where(df['normalized_xCoord'] == df['xCoord'], df['yCoord'], df['yCoord'] * -1)
+
     # print(rosters['fullName'].to_dict())
                 
     # print(df.columns)
@@ -202,7 +211,12 @@ if __name__ == "__main__":
     # date = datetime.now().strftime("%Y-%m-%d")
     # game_id = 2023020361
 
+    games_list = get_team_schedule(team="MTL", season = 20232024).query("gameType == 2 and gameState != 'FUT'").gameId.tolist()
 
+    # get_pbp(game_id=game_id).to_csv(f"data/pbp_{game_id}.csv", index=False)
+    for i, game_id in enumerate(games_list):
+        print(f"Scraping game {i+1}/{len(games_list)} \n ----------------------------------------- \n")
+        scrape_game(game_id, save=True)
 
 
 

@@ -123,7 +123,7 @@ def fetch_standings_json(date = "now"):
     response.raise_for_status()
     return response.json()
 
-@timer
+# @timer
 def get_teams(date = "now"):
     """
     Gets the teams for a given date.
@@ -148,7 +148,7 @@ def get_teams(date = "now"):
     
     return df
 
-@timer
+# @timer
 def get_team_schedule(team: str = DEFAULT_TEAM, season: int = DEFAULT_SEASON):
     """
     Gets the schedule for a given team.
@@ -187,7 +187,7 @@ def get_team_schedule(team: str = DEFAULT_TEAM, season: int = DEFAULT_SEASON):
                             
     return df
 
-@timer
+# @timer
 def get_schedule_week(date = "now"):
     """
     Gets the schedule for a given week.
@@ -227,7 +227,7 @@ def get_schedule_week(date = "now"):
                             
     return df
 
-@timer
+# @timer
 def get_standings(date = "now"):
     """
     Gets the standings for a given date.
@@ -252,7 +252,7 @@ def get_standings(date = "now"):
                             
     return df
 
-@timer
+# @timer
 def get_pbp(game_id: int):
     """
     Gets the play-by-play for a given game.

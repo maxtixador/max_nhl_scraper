@@ -15,7 +15,8 @@ pip install max_nhl_scraper
 Here's a simple example of how to use max_nhl_scraper:
 
 ```python
-from max_nhl_scraper import MaxNHLScraper as mx
+from max_nhl_scraper.nhl.main import scrape_game
+from max_nhl_scraper.nhl.utility.functions import *
 
 
 
@@ -27,10 +28,10 @@ data = mx.scrape_game(game_id=2023020005) #Replace <2023020005> with the actual 
 
 nhl_scraper requires the following Python libraries:
 
-beautifulsoup4==4.12.2
-numpy==1.26.2
-pandas==2.1.4
-Requests==2.31.0
+- beautifulsoup4==4.12.2
+- numpy==1.26.2
+- pandas==2.1.4
+- Requests==2.31.0
 These dependencies should be automatically installed when you install the package via pip.
 
 ## License
