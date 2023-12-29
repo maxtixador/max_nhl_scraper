@@ -21,7 +21,7 @@ from max_nhl_scraper.nhl.utility.functions import *
 
 
 # Example: Scrape data for a specific game or player
-data = mx.scrape_game(game_id=2023020005) #Replace <2023020005> with the actual game ID you want to scrape data for.
+data = scrape_game(game_id=2023020005) #Replace <2023020005> with the actual game ID you want to scrape data for.
 ```
 
 ## Requirements
