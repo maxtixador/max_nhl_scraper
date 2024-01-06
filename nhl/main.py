@@ -174,10 +174,40 @@ def scrape_game(game_id : int, file : str = None, save : bool = False):
 
     if save:
         for key, value in data_dict.items():
-            value.to_csv(f"data/{key}/{key}_{game_id}.csv", index=False)
+            if not os.path.exists(f"data/{key}"):
+                os.makedirs(f"data/{key}")
+            
+            # Verify if file exists
+            if os.path.isfile(f"data/{key}/{key}_{game_id}.pkl"):
+                print(f"File {key}_{game_id}.pkl already exists. Skipping...")
+            else:
+                print(f"Saving {key}_{game_id}.pkl")
+                value.to_pickle(f"data/{key}/{key}_{game_id}.pkl")
+            # value.to_csv(f"data/{key}/{key}_{game_id}.csv", index=False)
             
 
     return returning_data
+
+if __name__ == "__main__":
+    
+    # print(get_teams().abbrev.tolist())
+
+    games_list = pd.concat([get_team_schedule(team=team, season = 20232024).query("gameType == 2 and gameState != 'FUT'") for team in get_teams().abbrev.tolist()]).gameId.unique().tolist()
+
+    failed_ids = []
+    # get_pbp(game_id=game_id).to_csv(f"data/pbp_{game_id}.csv", index=False)
+    for i, game_id in enumerate(games_list):
+        print(f"Scraping : {game_id}\ngame {i+1}/{len(games_list)} \n ----------------------------------------- \n")
+        try:
+            scrape_game(game_id, save=True)
+        except:
+            print(f"Error scraping game {game_id}")
+            failed_ids.append(game_id)
+            continue
+    
+    print(f"Failed IDs: {failed_ids}")
+
+        # scrape_game(game_id, save=True) 
 
 ### SCRAPE ALL HABS GAMES (PLAYED) AND SAVE TO CSV
 # games_list = get_team_schedule(team="MTL", season = 20232024).query("gameType == 2 and gameState != 'FUT'").gameId.tolist()
@@ -204,25 +234,71 @@ def scrape_game(game_id : int, file : str = None, save : bool = False):
 
     # print(combined_df)
 
-
-
-if __name__ == "__main__":
-    
-    # date = datetime.now().strftime("%Y-%m-%d")
+   # date = datetime.now().strftime("%Y-%m-%d")
     # game_id = 2023020361
 
-    games_list = get_team_schedule(team="MTL", season = 20232024).query("gameType == 2 and gameState != 'FUT'").gameId.tolist()
+    # games_list = get_team_schedule(team="MTL", season = 20232024).query("gameType == 2 and gameState != 'FUT'").gameId.tolist()
 
-    # get_pbp(game_id=game_id).to_csv(f"data/pbp_{game_id}.csv", index=False)
-    for i, game_id in enumerate(games_list):
-        print(f"Scraping game {i+1}/{len(games_list)} \n ----------------------------------------- \n")
-        scrape_game(game_id, save=True)
+    # # get_pbp(game_id=game_id).to_csv(f"data/pbp_{game_id}.csv", index=False)
+    # for i, game_id in enumerate(games_list):
+    #     print(f"Scraping game {i+1}/{len(games_list)} \n ----------------------------------------- \n")
+    #     scrape_game(game_id, save=True)
 
 
+
+    # # Get a list of all CSV files in the 'pbp' directory
+    # csv_files = glob.glob('data/pbp/*.csv')
+
+    # # Initialize an empty list to store the dataframes
+    # dfs = []
+
+    # # Read each CSV file and append it to the list
+    # for csv_file in csv_files:
+    #     df = pd.read_csv(csv_file)
+    #     dfs.append(df)
+
+    # # Concatenate all dataframes in the list
+    # combined_df = pd.concat(dfs, ignore_index=True).reset_index(drop=True)
+
+    # fig, ax = plt.subplots(figsize=(12, 8))
+    # ax.set_xlim(-100, 100)
+    # ax.set_ylim(-42.5, 42.5)
+
+    # fenwick_events = ['shot-on-goal','missed-shot', 'goal']
+
+
+    # # Plot the rink
+    # fenwicks = (combined_df
+    #             .query("event in @fenwick_events and game_strength == '5v5'")
+    #             .assign(teamGroup = lambda x : x['eventTeam'].where(x['eventTeam'] == 'MTL', 'Opponent'))
+    #             .assign(newX = lambda x : x['normalized_xCoord'].where(x['teamGroup'] != 'MTL', x['normalized_xCoord'] * -1),
+    #                     newY = lambda x : x['normalized_yCoord'].where(x['teamGroup'] != 'MTL', x['normalized_yCoord'] * -1),
+    #                     color = lambda x : x['teamGroup'].map({'MTL': 'red', 'Opponent': 'blue'}),
+    #                     shape = lambda x : x['event'].map({'shot-on-goal': 'o', 'missed-shot': 'x', 'goal': '*'})))
+    
+    # for (teamGroup, event), df in fenwicks.query("shape == 'o'").groupby(['teamGroup', 'event']):
+    #     ax.scatter(df['newX'], df['newY'], s=30, alpha=0.5, label=f"{teamGroup} {event}", color=df['color'], marker='o')
+
+    # for (teamGroup, event), df in fenwicks.query("shape == 'x'").groupby(['teamGroup', 'event']):
+    #     ax.scatter(df['newX'], df['newY'], s=30, alpha=0.5, label=f"{teamGroup} {event}", color=df['color'], marker='x')
+
+    # for (teamGroup, event), df in fenwicks.query("shape == '*'").groupby(['teamGroup', 'event']):
+    #     ax.scatter(df['newX'], df['newY'], s=30, alpha=0.5, label=f"{teamGroup} {event}", color=df['color'], marker='*')
+
+    # ax.vlines(x = 25, color='blue', ymin=-42.5, ymax=42.5)
+    # ax.vlines(x = -25, color='blue', ymin=-42.5, ymax=42.5)
+    # ax.vlines(x = 0, color='red', ymin=-42.5, ymax=42.5)
+
+    # ax.vlines(x = 89, color='red', ymin=-42.5, ymax=42.5)
+    # ax.vlines(x = -89, color='red', ymin=-42.5, ymax=42.5)
+
+    # ax.set_xlim(-100, 100)
+    # ax.set_ylim(-42.5, 42.5)
+
+    # ax.legend()
+    # ax.grid(True, alpha=0.3)
+    # plt.show()
+    
 
     # print(scrape_game(game_id, save=True))
 
-    
-
-
-    # print("Hello World!")

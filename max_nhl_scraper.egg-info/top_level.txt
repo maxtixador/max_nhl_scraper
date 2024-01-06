@@ -1,1 +1,1 @@
-max_nhl_scraper
+nhl
