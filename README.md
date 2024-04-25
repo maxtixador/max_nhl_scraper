@@ -4,11 +4,7 @@ The `max_nhl_scraper` package is a Python tool for scraping NHL (National Hockey
 
 ## Installation
 
-You can install `max_nhl_scraper` directly from PyPI:
-
-```bash
-pip install max_nhl_scraper
-```
+Still working on it
 
 ## Usage
 

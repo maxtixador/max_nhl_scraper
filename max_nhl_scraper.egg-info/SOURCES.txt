@@ -1,9 +1,0 @@
-README.md
-setup.py
-max_nhl_scraper/__init__.py
-max_nhl_scraper/max_nhl_scraper.py
-max_nhl_scraper.egg-info/PKG-INFO
-max_nhl_scraper.egg-info/SOURCES.txt
-max_nhl_scraper.egg-info/dependency_links.txt
-max_nhl_scraper.egg-info/requires.txt
-max_nhl_scraper.egg-info/top_level.txt
