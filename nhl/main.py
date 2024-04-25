@@ -8,15 +8,22 @@ from datetime import timedelta
 import numpy as np
 import matplotlib.pyplot as plt
 import glob
+import re
 
 
-from utility.constants import *
-from utility.decorators import *
-from utility.functions import *
+
+
+from utilis.constants import *
+from utilis.decorators import *
+from utilis.functions import *
+
 pd.set_option('display.max_columns', None)
 
+
+
+
 @timer
-def scrape_game(game_id : int, file : str = None, save : bool = False):
+def scrape_game(game_id : int, file : str = None, save : bool = False,):
     """
     Scrape game data from NHL API
 
@@ -41,7 +48,8 @@ def scrape_game(game_id : int, file : str = None, save : bool = False):
     print(f"Fetching play-by-play for {game_id} \n")
     game_dict = fetch_play_by_play_json(game_id)
 
-    rosters = pd.json_normalize(game_dict.get("rosterSpots", [])).set_index("playerId").assign(fullName = lambda x: x["firstName.default"] + " " + x["lastName.default"]).drop(columns=["firstName.default", "lastName.default"])
+    rosters = pd.json_normalize(game_dict.get("rosterSpots", [])).set_index("playerId").assign(fullName = lambda x: x["firstName.default"] + " " + x["lastName.default"]).rename({"firstName.default": "firstName",
+                                                                                                                                                                                  "lastName.default" : "lastName"}, axis=1)
 
 
 
@@ -56,6 +64,9 @@ def scrape_game(game_id : int, file : str = None, save : bool = False):
     df['venue'] = game_dict.get('venue', "").get('default', "")
 
     df = df.rename(columns={'typeDescKey': 'event'})
+
+    # Add period column ### New because of API Changes
+    df['period'] = pd.to_numeric(df['periodDescriptor.number'], errors='coerce')
 
     # Add elapsed time column
     df['elapsedTime'] = (df['period'].astype(int) - 1) * 1200 + df['timeInPeriod'].str.split(':').apply(lambda x: int(x[0]) * 60 + int(x[1]))
@@ -84,8 +95,10 @@ def scrape_game(game_id : int, file : str = None, save : bool = False):
                             'details.blockingPlayerId','details.hitteePlayerId', 'details.assist1PlayerId',
                             'details.drawnByPlayerId', 'details.assist2PlayerId',
                             'details.eventOwnerTeamId', 'details.scoringPlayerTotal', 'details.assist1PlayerTotal',
-                            'details.assist2PlayerTotal', 'situationCode','eventId', 'details.playerId', 'typeCode'])
+                            'details.assist2PlayerTotal', 'situationCode', 'details.playerId', 'typeCode'])
 
+    #Make unique id for event
+    df['uniqueId'] = pd.to_numeric(df['eventId'].astype(str) + df['gameId'].astype(str) + df['period'].astype(str) + df['sortOrder'].astype(str), errors='coerce')
     df = df.sort_values(by=['elapsedTime'], ascending=True).reset_index(drop=True)
 
     df = df.rename(columns={'periodDescriptor.number': 'periodDescriptor_number'})
@@ -163,7 +176,16 @@ def scrape_game(game_id : int, file : str = None, save : bool = False):
     # print(rosters['fullName'].to_dict())
                 
     # print(df.columns)
+    rosters =  rosters.reset_index().rename(columns={'index': 'playerId'})
+    
+    # Define a regular expression pattern to match columns
+    pattern = r'^(firstName|lastName)\.\w{2}$'
 
+    # Filter columns that match the pattern and drop them
+    columns_to_remove = [col for col in rosters.columns if re.match(pattern, col)]
+    rosters = rosters.drop(columns=columns_to_remove)
+
+    
     data_dict = {
         'pbp': df,
         'rosters': rosters,
@@ -172,133 +194,16 @@ def scrape_game(game_id : int, file : str = None, save : bool = False):
 
     returning_data = data_dict.get(file, []) if file else data_dict
 
+    
+    # print(data_dict['rosters'].columns)
+
     if save:
         for key, value in data_dict.items():
-            if not os.path.exists(f"data/{key}"):
-                os.makedirs(f"data/{key}")
-            
-            # Verify if file exists
-            if os.path.isfile(f"data/{key}/{key}_{game_id}.pkl"):
-                print(f"File {key}_{game_id}.pkl already exists. Skipping...")
-            else:
-                print(f"Saving {key}_{game_id}.pkl")
-                value.to_pickle(f"data/{key}/{key}_{game_id}.pkl")
-            # value.to_csv(f"data/{key}/{key}_{game_id}.csv", index=False)
-            
+            value.to_csv(f"{key}.csv", index=False)
 
     return returning_data
 
 if __name__ == "__main__":
-    
-    # print(get_teams().abbrev.tolist())
-
-    games_list = pd.concat([get_team_schedule(team=team, season = 20232024).query("gameType == 2 and gameState != 'FUT'") for team in get_teams().abbrev.tolist()]).gameId.unique().tolist()
-
-    failed_ids = []
-    # get_pbp(game_id=game_id).to_csv(f"data/pbp_{game_id}.csv", index=False)
-    for i, game_id in enumerate(games_list):
-        print(f"Scraping : {game_id}\ngame {i+1}/{len(games_list)} \n ----------------------------------------- \n")
-        try:
-            scrape_game(game_id, save=True)
-        except:
-            print(f"Error scraping game {game_id}")
-            failed_ids.append(game_id)
-            continue
-    
-    print(f"Failed IDs: {failed_ids}")
-
-        # scrape_game(game_id, save=True) 
-
-### SCRAPE ALL HABS GAMES (PLAYED) AND SAVE TO CSV
-# games_list = get_team_schedule(team="MTL", season = 20232024).query("gameType == 2 and gameState != 'FUT'").gameId.tolist()
-
-    # get_pbp(game_id=game_id).to_csv(f"data/pbp_{game_id}.csv", index=False)
-    # for i, game_id in enumerate(games_list):
-    #     print(f"Scraping game {i+1}/{len(games_list)} \n ----------------------------------------- \n")
-    #     scrape_game(game_id, save=True)
-
-### RETRIEVE ALL GAMES FROM CSV
-    # # Get a list of all CSV files in the 'pbp' directory
-    # csv_files = glob.glob('data/pbp/*.csv')
-
-    # # Initialize an empty list to store the dataframes
-    # dfs = []
-
-    # # Read each CSV file and append it to the list
-    # for csv_file in csv_files:
-    #     df = pd.read_csv(csv_file)
-    #     dfs.append(df)
-
-    # # Concatenate all dataframes in the list
-    # combined_df = pd.concat(dfs, ignore_index=True).reset_index(drop=True)
-
-    # print(combined_df)
-
-   # date = datetime.now().strftime("%Y-%m-%d")
-    # game_id = 2023020361
-
-    # games_list = get_team_schedule(team="MTL", season = 20232024).query("gameType == 2 and gameState != 'FUT'").gameId.tolist()
-
-    # # get_pbp(game_id=game_id).to_csv(f"data/pbp_{game_id}.csv", index=False)
-    # for i, game_id in enumerate(games_list):
-    #     print(f"Scraping game {i+1}/{len(games_list)} \n ----------------------------------------- \n")
-    #     scrape_game(game_id, save=True)
-
-
-
-    # # Get a list of all CSV files in the 'pbp' directory
-    # csv_files = glob.glob('data/pbp/*.csv')
-
-    # # Initialize an empty list to store the dataframes
-    # dfs = []
-
-    # # Read each CSV file and append it to the list
-    # for csv_file in csv_files:
-    #     df = pd.read_csv(csv_file)
-    #     dfs.append(df)
-
-    # # Concatenate all dataframes in the list
-    # combined_df = pd.concat(dfs, ignore_index=True).reset_index(drop=True)
-
-    # fig, ax = plt.subplots(figsize=(12, 8))
-    # ax.set_xlim(-100, 100)
-    # ax.set_ylim(-42.5, 42.5)
-
-    # fenwick_events = ['shot-on-goal','missed-shot', 'goal']
-
-
-    # # Plot the rink
-    # fenwicks = (combined_df
-    #             .query("event in @fenwick_events and game_strength == '5v5'")
-    #             .assign(teamGroup = lambda x : x['eventTeam'].where(x['eventTeam'] == 'MTL', 'Opponent'))
-    #             .assign(newX = lambda x : x['normalized_xCoord'].where(x['teamGroup'] != 'MTL', x['normalized_xCoord'] * -1),
-    #                     newY = lambda x : x['normalized_yCoord'].where(x['teamGroup'] != 'MTL', x['normalized_yCoord'] * -1),
-    #                     color = lambda x : x['teamGroup'].map({'MTL': 'red', 'Opponent': 'blue'}),
-    #                     shape = lambda x : x['event'].map({'shot-on-goal': 'o', 'missed-shot': 'x', 'goal': '*'})))
-    
-    # for (teamGroup, event), df in fenwicks.query("shape == 'o'").groupby(['teamGroup', 'event']):
-    #     ax.scatter(df['newX'], df['newY'], s=30, alpha=0.5, label=f"{teamGroup} {event}", color=df['color'], marker='o')
-
-    # for (teamGroup, event), df in fenwicks.query("shape == 'x'").groupby(['teamGroup', 'event']):
-    #     ax.scatter(df['newX'], df['newY'], s=30, alpha=0.5, label=f"{teamGroup} {event}", color=df['color'], marker='x')
-
-    # for (teamGroup, event), df in fenwicks.query("shape == '*'").groupby(['teamGroup', 'event']):
-    #     ax.scatter(df['newX'], df['newY'], s=30, alpha=0.5, label=f"{teamGroup} {event}", color=df['color'], marker='*')
-
-    # ax.vlines(x = 25, color='blue', ymin=-42.5, ymax=42.5)
-    # ax.vlines(x = -25, color='blue', ymin=-42.5, ymax=42.5)
-    # ax.vlines(x = 0, color='red', ymin=-42.5, ymax=42.5)
-
-    # ax.vlines(x = 89, color='red', ymin=-42.5, ymax=42.5)
-    # ax.vlines(x = -89, color='red', ymin=-42.5, ymax=42.5)
-
-    # ax.set_xlim(-100, 100)
-    # ax.set_ylim(-42.5, 42.5)
-
-    # ax.legend()
-    # ax.grid(True, alpha=0.3)
-    # plt.show()
-    
-
-    # print(scrape_game(game_id, save=True))
-
+    scrape_game(2020020001, save=True)
+    # scrape_game(2020020001, save=True)
+   
