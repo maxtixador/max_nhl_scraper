@@ -203,6 +203,8 @@ def scrape_game(game_id : int, file : str = None, save : bool = False,):
 
     return returning_data
 
+
+
 if __name__ == "__main__":
     scrape_game(2020020001, save=True)
     # scrape_game(2020020001, save=True)
