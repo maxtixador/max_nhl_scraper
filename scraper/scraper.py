@@ -22,7 +22,7 @@ pd.set_option('display.max_columns', None)
 
 
 
-@timer
+# @timer
 def scrape_game(game_id : int, file : str = None, save : bool = False,):
     """
     Scrape game data from NHL API
@@ -45,7 +45,7 @@ def scrape_game(game_id : int, file : str = None, save : bool = False,):
     
     shifts = fetch_html_shifts(game_id=game_id)
 
-    print(f"Fetching play-by-play for {game_id} \n")
+    # print(f"Fetching play-by-play for {game_id} \n")
     game_dict = fetch_play_by_play_json(game_id)
 
     rosters = pd.json_normalize(game_dict.get("rosterSpots", [])).set_index("playerId").assign(fullName = lambda x: x["firstName.default"] + " " + x["lastName.default"]).rename({"firstName.default": "firstName",
