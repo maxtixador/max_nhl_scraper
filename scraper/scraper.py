@@ -56,6 +56,19 @@ def scrape_game(game_id : int, file : str = None, save : bool = False,):
     
     df = pd.json_normalize(game_dict.get("plays", []))
 
+    # Add columns if they don't exist
+    cols_to_add3 = ['details.winningPlayerId', 'details.losingPlayerId', 'details.hittingPlayerId',
+                            'details.shootingPlayerId', 'details.scoringPlayerId', 'details.committedByPlayerId',
+                            'details.blockingPlayerId','details.hitteePlayerId', 'details.assist1PlayerId',
+                            'details.drawnByPlayerId', 'details.assist2PlayerId',
+                            'details.eventOwnerTeamId', 'details.scoringPlayerTotal', 'details.assist1PlayerTotal',
+                            'details.assist2PlayerTotal', 'situationCode', 'details.playerId', 'typeCode']
+    
+    for col in cols_to_add3:
+        if col not in df.columns:
+            df[col] = np.nan
+    
+
     # Add game_id column
     df['gameId'], rosters['gameId'], shifts['gameId'] = game_id, game_id, game_id
     df['seasonId'] = game_dict.get('season', "")
@@ -90,12 +103,7 @@ def scrape_game(game_id : int, file : str = None, save : bool = False,):
 
     df['event_player3_Id'] = df['details.assist2PlayerId']
 
-    df = df.drop(columns=['details.winningPlayerId', 'details.losingPlayerId', 'details.hittingPlayerId',
-                            'details.shootingPlayerId', 'details.scoringPlayerId', 'details.committedByPlayerId',
-                            'details.blockingPlayerId','details.hitteePlayerId', 'details.assist1PlayerId',
-                            'details.drawnByPlayerId', 'details.assist2PlayerId',
-                            'details.eventOwnerTeamId', 'details.scoringPlayerTotal', 'details.assist1PlayerTotal',
-                            'details.assist2PlayerTotal', 'situationCode', 'details.playerId', 'typeCode'])
+    df = df.drop(columns=cols_to_add3)
 
     #Make unique id for event
     df['uniqueId'] = pd.to_numeric(df['eventId'].astype(str) + df['gameId'].astype(str) + df['period'].astype(str) + df['sortOrder'].astype(str), errors='coerce')
