@@ -163,6 +163,10 @@ def scrape_game(game_id : int, file : str = None, save : bool = False,):
                 df.at[i, f"away_skater_id{j+1}"] = away_skater_ids[j]
                 df.at[i, f"away_skater_fullName{j+1}"] = str(id_name_dict.get(away_skater_ids[j], ""))
 
+    df['event_player1_fullName'] = df['event_player1_Id'].map(id_name_dict)
+    df['event_player2_fullName'] = df['event_player2_Id'].map(id_name_dict)
+    df['event_player3_fullName'] = df['event_player3_Id'].map(id_name_dict)
+
     df = df.replace('NaN', np.nan)
 
     df['home_goalie_id'] = home_goalie_id
@@ -180,6 +184,10 @@ def scrape_game(game_id : int, file : str = None, save : bool = False,):
 
     # Calculate 'normalized_yCoord' based on 'normalized_xCoord'
     df['normalized_yCoord'] = np.where(df['normalized_xCoord'] == df['xCoord'], df['yCoord'], df['yCoord'] * -1)
+
+    # Calculate 'normalized_xCoord_vertical' and 'normalized_yCoord_vertical' (offensive zone is on the top side of the ice rink)
+    df['normalized_xCoord_vertical'] = -1 * df['normalized_yCoord']
+    df['normalized_yCoord_vertical'] = df['normalized_xCoord']
 
     # print(rosters['fullName'].to_dict())
                 
